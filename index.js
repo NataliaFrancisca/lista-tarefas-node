@@ -31,7 +31,7 @@ const operation = () => {
 
         const handleActions = {
             'Adicionar Tarefa' : showInterfaceAddTask,
-            'Deletar Tarefa' : deleteTask,
+            'Deletar Tarefa' : showInterfaceDeleteTask,
             'Concluir Tarefa' : onCheck,
             'Exibir Tarefas' : showTasks,
             'Sair' : sair
@@ -82,20 +82,16 @@ const add_task = () => {
  
         console.log(chalk.green("Sua tarefa foi adicionada :)"));
        
-        setTimeout(() => {
-            console.clear();
-            add_task();
-        }, 1000)
+        clear_screen();
 
     }).catch(err => console.log(err));
 }
 
 // DELETAR UMA TAREFA
-const deleteTask = () => {
+const showInterfaceDeleteTask = () => {
     const tasks = getTasks();
-    const arrayTasks = tasks.notes.map(task => `[${task.id}] - ${task.text}`);
 
-    if(arrayTasks.length == 0){
+    if(tasks.length == 0){
         console.log(chalk.bgRed.black("Não existe nenhuma tarefa para ser deletada!"));
         return operation();
     }
@@ -105,27 +101,45 @@ const deleteTask = () => {
             type: 'list',
             name: "task",
             message: "Qual tarefa você deseja deletar?",
-            choices: arrayTasks
+            choices: tasks.map(task => `[${task.id}] - ${task.text}`)
         }
     ]).then((answer) => {
         const task = answer['task'];
-        tasks.notes = tasks.notes.filter(taskFilter => taskFilter.id !== onNumberID(task));
 
         if(!task){
             console.log(chalk.bgRed.black("Ocorreu um erro, tente novamente!"));
             return operation();
         }
 
-        updateFile(tasks);
-
+        delete_task(task);
+      
         console.log(chalk.bgGreen.bold("Tarefa deletada com sucesso!!"));
 
-        setTimeout(() => {
-            console.clear();
-            operation();
-        }, 1000)
+        clear_screen();
     }).catch((error) => console.log(error))
 }
+
+const delete_task = (task) => {
+    const prevData = getTasks();
+
+    const updatedData = prevData.filter(taskFilter => taskFilter.id !== onNumberID(task));
+    updateFile(updatedData);
+}
+
+
+
+
+
+
+
+
+const clear_screen = () => {
+    setTimeout(() => {
+        console.clear();
+        operation();
+    }, 1000)
+}
+
 
 const onCheck = () => {
     const tasks = getTasks();
