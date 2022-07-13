@@ -30,7 +30,7 @@ const operation = () => {
         const action = answer['action'];
 
         const handleActions = {
-            'Adicionar Tarefa' : addTask,
+            'Adicionar Tarefa' : showInterfaceAddTask,
             'Deletar Tarefa' : deleteTask,
             'Concluir Tarefa' : onCheck,
             'Exibir Tarefas' : showTasks,
@@ -51,46 +51,40 @@ const sair = () => {
 }
 
 // ADICIONAR A TAREFA
-const addTask = () => {
+const showInterfaceAddTask = () => {
     console.log(chalk.inverse.bold("Olá, aqui você pode anotar suas tarefas!!!"));
-    onAddTask();
+    add_task();
 }
 
-const onAddTask = () => {
+const add_task = () => {
     console.log(chalk.yellow.bold("Para voltar para o menu de navegação, digitar a letra: ") + chalk.bgYellow.bold("S"))
 
-    inquirer.prompt([
-        {
-            name: 'task',
-            message: "Digite a tarefa que você quer anotar: ",
-        }
-    ]).then((answer) => {
+    inquirer.prompt([{
+        name: 'task',
+        message: "Digite a tarefa que você quer anotar: ",
+        
+    }]).then((answer) => {
         const task = answer['task'];
-        const tasks = getTasks();
+        const prevData = getTasks();
+        const newTask = { id: createID(), checked: false, text: task }
 
         if(!task){
             console.log(chalk.bgRed.black("Ocorreu um erro, tente novamente!"));
-            return onAddTask();
+            return add_task();
         }
 
         if(task.toUpperCase() == 'S'){
             return operation();
         }
 
-        const newTask = {
-            id: createID(),
-            checked: false,
-            text: task
-        }
-
-        tasks.notes = [...tasks.notes, newTask];
-        updateFile(tasks);
+        prevData.notes = [...prevData.notes, newTask];
+        updateFile(prevData);
  
         console.log(chalk.green("Sua tarefa foi adicionada :)"));
        
         setTimeout(() => {
             console.clear();
-            onAddTask();
+            add_task();
         }, 1000)
 
     }).catch(err => console.log(err));
