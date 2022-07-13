@@ -12,14 +12,7 @@ const operation = () => {
 
     if(!fs.existsSync('tasks')){
         fs.mkdirSync('tasks')
-
-        fs.writeFileSync(
-            `tasks/file.json`,
-            `{"notes": []}`,
-            function (err) {
-                console.log(err)
-            },
-        )
+        fs.writeFileSync(`tasks/file.json`, `{"notes": []}`, ((err) => console.log(err)));
     }
 
     inquirer.prompt([{
@@ -30,33 +23,32 @@ const operation = () => {
             'Adicionar Tarefa',
             'Deletar Tarefa',
             'Concluir Tarefa',
-            'Editar Tarefa',
             'Exibir Tarefas',
             'Sair'
         ]
     }]).then((answer) => {
         const action = answer['action'];
 
-        if(action == 'Adicionar Tarefa'){
-            addTask();
-        }else if(action == 'Deletar Tarefa'){
-            deleteTask();
-        }else if(action == 'Concluir Tarefa'){
-            onCheck();
-        }else if(action == 'Editar Tarefa'){
-            editTask();
-        }else if(action == 'Exibir Tarefas'){
-            showTasks();
-        }else if(action == "Sair"){
-            console.log(chalk.bgBlue.black('Obrigado por usar BANCO OLIVAR RODRIGO'))
-            process.exit();
+        const handleActions = {
+            'Adicionar Tarefa' : addTask,
+            'Deletar Tarefa' : deleteTask,
+            'Concluir Tarefa' : onCheck,
+            'Exibir Tarefas' : showTasks,
+            'Sair' : sair
         }
-        
+
+        handleActions[action]();
+
     }).catch((error) => console.log(error));
 }
 
 operation();
 
+
+const sair = () => {
+    console.log(chalk.bgBlue.black('Obrigado por usar BANCO OLIVAR RODRIGO'))
+    process.exit();
+}
 
 // ADICIONAR A TAREFA
 const addTask = () => {
