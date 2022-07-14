@@ -4,7 +4,8 @@
   "description": "lista de tarefas usando node",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "author": "natalia francisca",
   "license": "ISC",
