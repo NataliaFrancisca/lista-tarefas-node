@@ -96,13 +96,17 @@ const showInterfaceDeleteTask = () => {
             type: 'list',
             name: "task",
             message: "Qual tarefa você deseja deletar?",
-            choices: tasks.map(task => `[${task.id}] - ${task.text}`)
+            choices: [...tasks.map(task => `[${task.id}] - ${task.text}`), `sair`]
         }
     ]).then((answer) => {
         const task = answer['task'];
 
         if(!task){
             console.log(chalk.bgRed.black("Ocorreu um erro, tente novamente!"));
+            return operation();
+        }
+
+        if(task == `sair`){
             return operation();
         }
 
@@ -122,9 +126,8 @@ const delete_task = (task) => {
 // CHECK THE TASK
 const showInterfaceCheckTask = () => {
     const tasks = get_tasks();
-    const arrayTasks = tasks.map(task => `[${task.id}] - ${task.text}`);
 
-    if(arrayTasks.length == 0){
+    if(tasks.length == 0){
         console.log(chalk.bgRed.black("Não existe nenhuma tarefa para ser concluida!"));
         return operation();
     }
@@ -134,10 +137,14 @@ const showInterfaceCheckTask = () => {
             type: 'list',
             name: "task",
             message: "Qual tarefa você quer concluir? ",
-            choices: arrayTasks
+            choices: [...tasks.map(task => `[${task.id}] - ${task.text}`), `sair`]
         }
     ]).then((answer) => {
         const task = answer['task'];
+
+        if(task == `sair`){
+            return operation()
+        }
     
         check_task(task);
         console.log(chalk.bgGreen.bold("Tarefa concluida com sucesso!!"));
