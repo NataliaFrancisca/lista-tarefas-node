@@ -5,14 +5,12 @@ const inquirer = require('inquirer');
 // MODULO INTERNO
 const fs = require('fs');
 
-
 // INICIALIZAR O APP
-
 const operation = () => {
 
     if(!fs.existsSync('tasks')){
         fs.mkdirSync('tasks')
-        fs.writeFileSync(`tasks/file.json`, `{"notes": []}`, ((err) => console.log(err)));
+        fs.writeFileSync(`tasks/tasks.json`, `[]`, ((err) => console.log(err)));
     }
 
     inquirer.prompt([{
@@ -32,9 +30,9 @@ const operation = () => {
         const handleActions = {
             'Adicionar Tarefa' : showInterfaceAddTask,
             'Deletar Tarefa' : showInterfaceDeleteTask,
-            'Concluir Tarefa' : onCheck,
+            'Concluir Tarefa' : showInterfaceCheckTask,
             'Exibir Tarefas' : showTasks,
-            'Sair' : sair
+            'Sair' : getOut
         }
 
         handleActions[action]();
@@ -43,12 +41,6 @@ const operation = () => {
 }
 
 operation();
-
-
-const sair = () => {
-    console.log(chalk.bgBlue.black('Obrigado por usar BANCO OLIVAR RODRIGO'))
-    process.exit();
-}
 
 // ADICIONAR A TAREFA
 const showInterfaceAddTask = () => {
@@ -65,7 +57,7 @@ const add_task = () => {
         
     }]).then((answer) => {
         const task = answer['task'];
-        const prevData = getTasks();
+        let prevData = get_tasks();
         const newTask = { id: createID(), checked: false, text: task }
 
         if(!task){
@@ -77,19 +69,22 @@ const add_task = () => {
             return operation();
         }
 
-        prevData.notes = [...prevData.notes, newTask];
-        updateFile(prevData);
+        prevData = [...prevData, newTask];
+        update_file(prevData);
  
         console.log(chalk.green("Sua tarefa foi adicionada :)"));
        
-        clear_screen();
+        setTimeout(() => {
+            console.clear();
+            add_task();
+        }, 1000)
 
     }).catch(err => console.log(err));
 }
 
 // DELETAR UMA TAREFA
 const showInterfaceDeleteTask = () => {
-    const tasks = getTasks();
+    const tasks = get_tasks();
 
     if(tasks.length == 0){
         console.log(chalk.bgRed.black("Não existe nenhuma tarefa para ser deletada!"));
@@ -112,38 +107,22 @@ const showInterfaceDeleteTask = () => {
         }
 
         delete_task(task);
-      
         console.log(chalk.bgGreen.bold("Tarefa deletada com sucesso!!"));
-
         clear_screen();
+
     }).catch((error) => console.log(error))
 }
 
 const delete_task = (task) => {
-    const prevData = getTasks();
-
+    const prevData = get_tasks();
     const updatedData = prevData.filter(taskFilter => taskFilter.id !== onNumberID(task));
-    updateFile(updatedData);
+    update_file(updatedData);
 }
 
-
-
-
-
-
-
-
-const clear_screen = () => {
-    setTimeout(() => {
-        console.clear();
-        operation();
-    }, 1000)
-}
-
-
-const onCheck = () => {
-    const tasks = getTasks();
-    const arrayTasks = tasks.notes.map(task => `[${task.id}] - ${task.text}`);
+// CHECK THE TASK
+const showInterfaceCheckTask = () => {
+    const tasks = get_tasks();
+    const arrayTasks = tasks.map(task => `[${task.id}] - ${task.text}`);
 
     if(arrayTasks.length == 0){
         console.log(chalk.bgRed.black("Não existe nenhuma tarefa para ser concluida!"));
@@ -159,43 +138,49 @@ const onCheck = () => {
         }
     ]).then((answer) => {
         const task = answer['task'];
-        tasks.notes = tasks.notes.map(taskMap => {
-            if(taskMap.id == onNumberID(task)){
-                taskMap.checked = true;
-                return taskMap;
-            }
-
-            return taskMap;
-        })
-
-        updateFile(tasks);
-
+    
+        check_task(task);
         console.log(chalk.bgGreen.bold("Tarefa concluida com sucesso!!"));
+        clear_screen();
 
-        setTimeout(() => {
-            console.clear();
-            operation();
-        }, 1000)
     }).catch((error) => console.log(error))
 }
 
+const check_task = (task) => {
+    const tasks = get_tasks();
 
+    tasks.map(taskMap => {
+        if(taskMap.id == onNumberID(task)){
+            taskMap.checked = true;
+            return taskMap;
+        }
+        return taskMap;
+    })
+
+    update_file(tasks);
+}
+
+// SHOW THE TASKS WITH CHECKED STYLE
 const showTasks = () => {
-    const tasks = getTasks();
+    const tasks = get_tasks();
 
-    if(tasks.notes.length == 0){
+    if(tasks.length == 0){
         console.log(chalk.bgRed.black("Não existe nenhuma tarefa para ser exibida!"));
         return operation();
     }
 
-    tasks.notes.map(task => task.checked ? console.log(chalk.green.bold.strikethrough(task.text)) : console.log(task.text))
-
+    console.log(chalk.bgMagentaBright.green.bold("Suas tarefas: "))
+    tasks.map(task => task.checked ? console.log(chalk.green.bold.strikethrough(task.text)) : console.log(task.text))
     setTimeout(() => {
         operation();
     },1000)
-  
 }
 
+// SAIR DO APP
+const getOut = () => {
+    console.log(chalk.bgMagentaBright.green.bold('Obrigado por usar nosso APP de tarefas'))
+    process.exit();
+}
 
 const onNumberID = (task) => {
     const getStringID = task.split(" ")[0];
@@ -203,25 +188,32 @@ const onNumberID = (task) => {
     return ID;
 }
 
-const updateFile = (data) => {
-    fs.writeFileSync(`tasks/file.json`, 
+const createID = () => {
+    const total = get_tasks();
+
+    const id_notes = total.map(note => note.id);
+    const maxID = Math.max(...id_notes);
+
+    return total.length == 0 ? 1 : maxID + 1;
+}
+
+const update_file = (data) => {
+    fs.writeFileSync(`tasks/tasks.json`, 
         JSON.stringify(data), 
     function(err){
         console.log(err)
     })
 }
 
-const createID = () => {
-    const total = getTasks();
-
-    const id_notes = total.notes.map(note => note.id);
-    const maxID = Math.max(...id_notes);
-
-    return total.notes.length == 0 ? 1 : maxID + 1;
+const clear_screen = () => {
+    setTimeout(() => {
+        console.clear();
+        operation();
+    }, 1000)
 }
 
-const getTasks = () => {
-    const fileJSON = fs.readFileSync(`tasks/file.json`, {
+const get_tasks = () => {
+    const fileJSON = fs.readFileSync(`tasks/tasks.json`, {
         encoding: 'utf8',
         flag: 'r'
     })
@@ -229,10 +221,3 @@ const getTasks = () => {
     return JSON.parse(fileJSON);
 }
 
-
-
-// ADICIONAR NOVA TAREFA
-// DELETAR TAREFA
-// CONCLUIR TAREFA
-// EDITAR TAREFA
-// EXIBIR MINHAS TAREFAS
